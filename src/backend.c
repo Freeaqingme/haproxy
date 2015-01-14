@@ -1291,6 +1291,8 @@ const char *backend_lb_algo_str(int algo) {
 		return "roundrobin";
 	else if (algo == BE_LB_ALGO_SRR)
 		return "static-rr";
+	else if (algo == BE_LB_ALGO_DNS)
+		return "dns";
 	else if (algo == BE_LB_ALGO_FAS)
 		return "first";
 	else if (algo == BE_LB_ALGO_LC)
@@ -1332,6 +1334,10 @@ int backend_parse_balance(const char **args, char **err, struct proxy *curproxy)
 	else if (!strcmp(args[0], "static-rr")) {
 		curproxy->lbprm.algo &= ~BE_LB_ALGO;
 		curproxy->lbprm.algo |= BE_LB_ALGO_SRR;
+	}
+	else if (!strcmp(args[0], "dns")) {
+		curproxy->lbprm.algo &= ~BE_LB_ALGO;
+		curproxy->lbprm.algo |= BE_LB_ALGO_DNS;
 	}
 	else if (!strcmp(args[0], "first")) {
 		curproxy->lbprm.algo &= ~BE_LB_ALGO;

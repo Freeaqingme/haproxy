@@ -27,6 +27,7 @@
 #include <types/lb_fas.h>
 #include <types/lb_fwlc.h>
 #include <types/lb_fwrr.h>
+#include <types/lb_fwdns.h>
 #include <types/lb_map.h>
 #include <types/server.h>
 
@@ -77,6 +78,7 @@
  */
 #define BE_LB_ALGO_NONE (BE_LB_KIND_NONE | BE_LB_NEED_NONE)    /* not defined */
 #define BE_LB_ALGO_RR   (BE_LB_KIND_RR | BE_LB_NEED_NONE)      /* round robin */
+#define BE_LB_ALGO_DNS  (BE_LB_KIND_RR | BE_LB_NEED_NONE)      /* DNS */
 #define BE_LB_ALGO_LC   (BE_LB_KIND_CB | BE_LB_NEED_NONE | BE_LB_CB_LC)    /* least connections */
 #define BE_LB_ALGO_FAS  (BE_LB_KIND_CB | BE_LB_NEED_NONE | BE_LB_CB_FAS)   /* first available server */
 #define BE_LB_ALGO_SRR  (BE_LB_KIND_RR | BE_LB_NEED_NONE | BE_LB_RR_STATIC) /* static round robin */
