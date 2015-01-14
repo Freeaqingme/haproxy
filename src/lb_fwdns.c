@@ -414,7 +414,7 @@ static struct server *fwdns_get_server_from_group(struct fwdns_group *grp)
 
 	node = eb32_first(&grp->curr);
 	s = eb32_entry(node, struct server, lb_node);
-	
+
 	if (!node || s->npos > grp->curr_pos) {
 		/* either we have no server left, or we have a hole */
 		struct eb32_node *node2;
@@ -466,6 +466,9 @@ static inline void fwdns_update_position(struct fwdns_group *grp, struct server 
  */
 struct server *fwdns_get_next_server(struct proxy *p, struct server *srvtoavoid)
 {
+
+	printf("fwdns_get_next_server");
+
 	struct server *srv, *full, *avoided;
 	struct fwdns_group *grp;
 	int switched;

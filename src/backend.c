@@ -652,6 +652,7 @@ int assign_server(struct session *s)
 				break;
 
 			default:
+printf("Foobar");
 				/* unknown balancing algorithm */
 				err = SRV_STATUS_INTERNAL;
 				goto out;
@@ -1464,7 +1465,7 @@ int backend_parse_balance(const char **args, char **err, struct proxy *curproxy)
 		}
 	}
 	else {
-		memprintf(err, "only supports 'roundrobin', 'static-rr', 'leastconn', 'source', 'uri', 'url_param', 'hdr(name)' and 'rdp-cookie(name)' options.");
+		memprintf(err, "only supports 'roundrobin', 'static-rr', 'leastconn', 'source', 'uri', 'url_param', 'hdr(name)', 'rdp-cookie(name)' and 'dns' options.");
 		return -1;
 	}
 	return 0;
