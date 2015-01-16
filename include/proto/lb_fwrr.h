@@ -27,7 +27,7 @@
 #include <types/server.h>
 
 void fwrr_init_server_groups(struct proxy *p);
-struct server *fwrr_get_next_server(struct proxy *p, struct server *srvtoavoid);
+struct server *fwrr_get_next_server(struct proxy *p, struct server *srvtoavoid, struct session *s);
 
 #endif /* _PROTO_LB_FWRR_H */
 

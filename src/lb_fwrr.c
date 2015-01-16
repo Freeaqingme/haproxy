@@ -20,6 +20,10 @@
 
 #include <proto/backend.h>
 #include <proto/queue.h>
+#include <proto/proto_http.h>
+
+#include <string.h>
+#define NOT_FOUND -1
 
 static inline void fwrr_remove_from_tree(struct server *s);
 static inline void fwrr_queue_by_weight(struct eb_root *root, struct server *s);
@@ -164,7 +168,7 @@ static void fwrr_update_server_weight(struct server *srv)
 	 * there are some computations to perform to find a new place and
 	 * possibly a new tree for this server.
 	 */
-	 
+
 	old_state = srv_was_usable(srv);
 	new_state = srv_is_usable(srv);
 
@@ -315,7 +319,7 @@ static void fwrr_queue_srv(struct server *s)
 	struct fwrr_group *grp;
 
 	grp = (s->flags & SRV_F_BACKUP) ? &p->lbprm.fwrr.bck : &p->lbprm.fwrr.act;
-	
+
 	/* Delay everything which does not fit into the window and everything
 	 * which does not fit into the theorical new window.
 	 */
@@ -414,7 +418,7 @@ static struct server *fwrr_get_server_from_group(struct fwrr_group *grp)
 
 	node = eb32_first(&grp->curr);
 	s = eb32_entry(node, struct server, lb_node);
-	
+
 	if (!node || s->npos > grp->curr_pos) {
 		/* either we have no server left, or we have a hole */
 		struct eb32_node *node2;
@@ -464,8 +468,37 @@ static inline void fwrr_update_position(struct fwrr_group *grp, struct server *s
  * the init tree if appropriate. If both trees are empty, return NULL.
  * Saturated servers are skipped and requeued.
  */
-struct server *fwrr_get_next_server(struct proxy *p, struct server *srvtoavoid)
+struct server *fwrr_get_next_server(struct proxy *p, struct server *srvtoavoid, struct session *s)
 {
+        struct http_txn *txn = &s->txn;
+        struct hdr_ctx ctx;
+	ctx.idx = 0;
+        char *h, *p2;
+	char buf[256];
+//        const char *host;
+//	int hostlen;
+struct chunk host, host2;
+
+	h = "Host";
+	int len = strlen(h);
+
+        if (!http_find_header2(h, len, s->req->buf->data, &txn->hdr_idx, &ctx)) {
+		fprintf(stderr, "http_find_header2 retval non true\n");
+	}
+        h = ctx.line + ctx.val;
+//	fprintf(stderr, "Length: %d\n", ctx.vlen);
+//	memmove(buf, ctx.line + ctx.val, ctx.vlen);
+//	buf[ctx.vlen] = 0;
+//        p2 = memchr(h, ' ', ctx.vlen);
+//	fprintf(stderr, "String: %s\n", buf);
+//        if (!p || p == h)
+//                return 0;
+
+        chunk_initlen(&host, h, 0, ctx.vlen);
+	fprintf(stderr, host.str);
+//fprintf(stderr, host);
+
+
 	struct server *srv, *full, *avoided;
 	struct fwrr_group *grp;
 	int switched;

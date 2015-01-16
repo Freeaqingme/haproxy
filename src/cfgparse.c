@@ -1553,7 +1553,7 @@ int cfg_parse_global(const char *file, int linenum, char **args, int kwm)
 				}
 			}
 		}
-		
+
 		Alert("parsing [%s:%d] : unknown keyword '%s' in '%s' section\n", file, linenum, args[0], "global");
 		err_code |= ERR_ALERT | ERR_FATAL;
 	}
@@ -3889,7 +3889,7 @@ stats_error_parsing:
 					reqlen += strlen(args[4]);
 				else
 					reqlen += strlen("HTTP/1.0");
-		    
+
 				curproxy->check_req = (char *)malloc(reqlen);
 				curproxy->check_len = snprintf(curproxy->check_req, reqlen,
 							       "%s %s %s\r\n", args[2], args[3], *args[4]?args[4]:"HTTP/1.0");
@@ -4198,6 +4198,42 @@ stats_error_parsing:
 					goto out;
 				}
 			} /* end while loop */
+		}
+		else if (!strcmp(args[1], "dns")) {
+			int cur_arg;
+
+			curproxy->options |= PR_O_DNS;
+
+			/* loop to go through arguments - start at 2, since 0+1 = "option" "forwardfor" */
+			cur_arg = 2;
+			while (*(args[cur_arg])) {
+				if (!strcmp(args[cur_arg], "suffix")) {
+					/* suboption header - needs additional argument for it */
+					if (*(args[cur_arg+1]) == 0) {
+						Alert("parsing [%s:%d] : '%s %s %s' expects <suffix> as argument.\n",
+						      file, linenum, args[0], args[1], args[cur_arg]);
+						err_code |= ERR_ALERT | ERR_FATAL;
+						goto out;
+					}
+					free(curproxy->fwdfor_hdr_name);
+					curproxy->dns_suffix_name = strdup(args[cur_arg+1]);
+					curproxy->dns_suffix_len  = strlen(curproxy->dns_suffix_name);
+					cur_arg += 2;
+				} else {
+					/* unknown suboption - catchall */
+					Alert("parsing [%s:%d] : '%s %s' only supports value: 'suffix'.\n",
+					      file, linenum, args[0], args[1]);
+					err_code |= ERR_ALERT | ERR_FATAL;
+					goto out;
+				}
+			} /* end while loop */
+
+			if (!curproxy->dns_suffix_name) {
+				Alert("parsing [%s:%d] : '%s %s' Requires option 'suffix'.\n",
+                                    file, linenum, args[0], args[1]);
+                                 err_code |= ERR_ALERT | ERR_FATAL;
+                                 goto out;
+			}
 		}
 		else if (!strcmp(args[1], "originalto")) {
 			int cur_arg;

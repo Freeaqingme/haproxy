@@ -82,7 +82,7 @@ enum pr_mode {
 #define PR_O_DISPATCH   0x00000040      /* use dispatch mode */
 /* unused: 0x00000080 */
 #define PR_O_FWDFOR     0x00000100      /* conditionally insert x-forwarded-for with client address */
-/* unused: 0x00000200 */
+#define PR_O_DNS        0x00000200      /* Use DNS to specify a server to use */
 #define PR_O_NULLNOLOG  0x00000400      /* a connect without request will not be logged */
 /* unused: 0x0800, 0x1000 */
 #define PR_O_FF_ALWAYS  0x00002000      /* always set x-forwarded-for */
@@ -379,6 +379,8 @@ struct proxy {
 	} conf;					/* config information */
 	void *parent;				/* parent of the proxy when applicable */
 	struct comp *comp;			/* http compression */
+	char *dns_suffix_name;			/* The DNS suffix to look up what server to use */
+	int dns_suffix_len;			/* strlen(dns_suffix_len). Computed only once */
 };
 
 struct switching_rule {

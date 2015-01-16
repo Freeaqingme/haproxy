@@ -571,7 +571,7 @@ int assign_server(struct session *s)
 		 */
 		switch (s->be->lbprm.algo & BE_LB_LKUP) {
 		case BE_LB_LKUP_RRTREE:
-			srv = fwrr_get_next_server(s->be, prev_srv);
+			srv = fwrr_get_next_server(s->be, prev_srv, s);
 			break;
 
 		case BE_LB_LKUP_FSTREE:
