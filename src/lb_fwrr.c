@@ -22,9 +22,6 @@
 #include <proto/queue.h>
 #include <proto/proto_http.h>
 
-#include <string.h>
-#define NOT_FOUND -1
-
 static inline void fwrr_remove_from_tree(struct server *s);
 static inline void fwrr_queue_by_weight(struct eb_root *root, struct server *s);
 static inline void fwrr_dequeue_srv(struct server *s);

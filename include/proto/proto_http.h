@@ -89,7 +89,7 @@ void manage_server_side_cookies(struct session *s, struct channel *rtr);
 void check_response_for_cacheability(struct session *s, struct channel *rtr);
 int stats_check_uri(struct stream_interface *si, struct http_txn *txn, struct proxy *backend);
 void init_proto_http();
-extern int http_find_full_header2(const char *name, int len,
+int http_find_full_header2(const char *name, int len,
                            char *sol, struct hdr_idx *idx,
                            struct hdr_ctx *ctx);
 int http_find_header2(const char *name, int len,
