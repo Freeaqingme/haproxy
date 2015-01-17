@@ -473,31 +473,16 @@ struct server *fwrr_get_next_server(struct proxy *p, struct server *srvtoavoid, 
         struct http_txn *txn = &s->txn;
         struct hdr_ctx ctx;
 	ctx.idx = 0;
-        char *h, *p2;
-	char buf[256];
-//        const char *host;
-//	int hostlen;
-struct chunk host, host2;
+	char *host;
+//	struct chunk host;
 
-	h = "Host";
-	int len = strlen(h);
+        if (http_find_header2("Host", 4, s->req->buf->data, &txn->hdr_idx, &ctx)) {
+//		chunk_initlen(&host, (ctx.line + ctx.val), 0, ctx.vlen);
 
-        if (!http_find_header2(h, len, s->req->buf->data, &txn->hdr_idx, &ctx)) {
-		fprintf(stderr, "http_find_header2 retval non true\n");
+		host = malloc(ctx.vlen +1);
+		memcpy(host, (ctx.line + ctx.val), ctx.vlen);
+		host[ctx.vlen] = '\0';
 	}
-        h = ctx.line + ctx.val;
-//	fprintf(stderr, "Length: %d\n", ctx.vlen);
-//	memmove(buf, ctx.line + ctx.val, ctx.vlen);
-//	buf[ctx.vlen] = 0;
-//        p2 = memchr(h, ' ', ctx.vlen);
-//	fprintf(stderr, "String: %s\n", buf);
-//        if (!p || p == h)
-//                return 0;
-
-        chunk_initlen(&host, h, 0, ctx.vlen);
-	fprintf(stderr, host.str);
-//fprintf(stderr, host);
-
 
 	struct server *srv, *full, *avoided;
 	struct fwrr_group *grp;
