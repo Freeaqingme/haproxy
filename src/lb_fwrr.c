@@ -14,6 +14,7 @@
 #include <common/config.h>
 #include <common/debug.h>
 #include <eb32tree.h>
+#include <netdb.h>
 
 #include <types/global.h>
 #include <types/server.h>
@@ -461,24 +462,51 @@ static inline void fwrr_update_position(struct fwrr_group *grp, struct server *s
 	}
 }
 
+void fwrr_get_dns_grp(struct proxy *p, struct session *s)
+{
+        struct http_txn *txn = &s->txn;
+        struct hdr_ctx ctx;
+	ctx.idx = 0;
+	char *host;
+	struct addrinfo *addrRes;
+	char addrstr[100];
+	void *addr;
+
+        if (!http_find_header2("Host", 4, s->req->buf->data, &txn->hdr_idx, &ctx)) {
+		return;
+	}
+
+	/* Fixme: When a port number is specified, stuff will fail. */
+	/* Fixme? Could also use strcpy/strcat(), but then we'd have to include string.h */
+	host = malloc(ctx.vlen + p->dns_suffix_len + 1);
+	memcpy(host, ctx.line + ctx.val, ctx.vlen);
+	memcpy(host + ctx.vlen, p->dns_suffix_name, ctx.vlen + p->dns_suffix_len);
+	host[(ctx.vlen + p->dns_suffix_len)] = '\0';
+
+	if(getaddrinfo (host, NULL, NULL, &addrRes) != 0)
+		return;
+
+	while (addrRes) {
+		addr = (addrRes->ai_family == AF_INET)
+			? &((struct sockaddr_in *) addrRes->ai_addr)->sin_addr
+			: &((struct sockaddr_in6 *) addrRes->ai_addr)->sin6_addr;
+
+		inet_ntop (addrRes->ai_family, addr, addrstr, 100);
+		fprintf (stderr, "IPv%d address: %s\n", addrRes->ai_family == PF_INET6 ? 6 : 4, addrstr);
+		addrRes = addrRes->ai_next;
+    	}
+
+
+}
+
 /* Return next server from the current tree in backend <p>, or a server from
  * the init tree if appropriate. If both trees are empty, return NULL.
  * Saturated servers are skipped and requeued.
  */
 struct server *fwrr_get_next_server(struct proxy *p, struct server *srvtoavoid, struct session *s)
 {
-        struct http_txn *txn = &s->txn;
-        struct hdr_ctx ctx;
-	ctx.idx = 0;
-	char *host;
-//	struct chunk host;
-
-        if (http_find_header2("Host", 4, s->req->buf->data, &txn->hdr_idx, &ctx)) {
-//		chunk_initlen(&host, (ctx.line + ctx.val), 0, ctx.vlen);
-
-		host = malloc(ctx.vlen +1);
-		memcpy(host, (ctx.line + ctx.val), ctx.vlen);
-		host[ctx.vlen] = '\0';
+	if (p->options & PR_O_DNS) {
+		fwrr_get_dns_grp(p, s);
 	}
 
 	struct server *srv, *full, *avoided;
