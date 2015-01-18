@@ -25,6 +25,7 @@
 
 static inline void fwrr_remove_from_tree(struct server *s);
 static inline void fwrr_queue_by_weight(struct eb_root *root, struct server *s);
+static inline void fwrr_init_server_group(struct fwrr_group *grp, int tot_weight);
 static inline void fwrr_dequeue_srv(struct server *s);
 static void fwrr_get_srv(struct server *s);
 static void fwrr_queue_srv(struct server *s);
@@ -259,7 +260,6 @@ static inline void fwrr_queue_by_weight(struct eb_root *root, struct server *s)
 void fwrr_init_server_groups(struct proxy *p)
 {
 	struct server *srv;
-	struct eb_root init_head = EB_ROOT;
 
 	p->lbprm.set_server_status_up   = fwrr_set_server_status_up;
 	p->lbprm.set_server_status_down = fwrr_set_server_status_down;
@@ -274,21 +274,8 @@ void fwrr_init_server_groups(struct proxy *p)
 	recount_servers(p);
 	update_backend_weight(p);
 
-	/* prepare the active servers group */
-	p->lbprm.fwrr.act.curr_pos = p->lbprm.fwrr.act.curr_weight =
-		p->lbprm.fwrr.act.next_weight = p->lbprm.tot_wact;
-	p->lbprm.fwrr.act.curr = p->lbprm.fwrr.act.t0 =
-		p->lbprm.fwrr.act.t1 = init_head;
-	p->lbprm.fwrr.act.init = &p->lbprm.fwrr.act.t0;
-	p->lbprm.fwrr.act.next = &p->lbprm.fwrr.act.t1;
-
-	/* prepare the backup servers group */
-	p->lbprm.fwrr.bck.curr_pos = p->lbprm.fwrr.bck.curr_weight =
-		p->lbprm.fwrr.bck.next_weight = p->lbprm.tot_wbck;
-	p->lbprm.fwrr.bck.curr = p->lbprm.fwrr.bck.t0 =
-		p->lbprm.fwrr.bck.t1 = init_head;
-	p->lbprm.fwrr.bck.init = &p->lbprm.fwrr.bck.t0;
-	p->lbprm.fwrr.bck.next = &p->lbprm.fwrr.bck.t1;
+	fwrr_init_server_group(&p->lbprm.fwrr.act, p->lbprm.tot_wact);
+	fwrr_init_server_group(&p->lbprm.fwrr.bck, p->lbprm.tot_wbck);
 
 	/* queue active and backup servers in two distinct groups */
 	for (srv = p->srv; srv; srv = srv->next) {
@@ -300,6 +287,17 @@ void fwrr_init_server_groups(struct proxy *p)
 				srv);
 	}
 }
+
+void fwrr_init_server_group(struct fwrr_group *grp, int tot_weight)
+{
+	struct eb_root init_head = EB_ROOT;
+
+        grp->curr_pos = grp->curr_weight = grp->next_weight = tot_weight;
+        grp->curr = grp->t0 = grp->t1 = init_head;
+        grp->init = &grp->t0;
+        grp->next = &grp->t1;
+}
+
 
 /* simply removes a server from a weight tree */
 static inline void fwrr_dequeue_srv(struct server *s)
